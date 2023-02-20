@@ -35,6 +35,15 @@ const (
 	// EdgeNodeName is KubeEdge node unique identification string
 	EdgeNodeName = "edgenode-name"
 
+	//HasDefaultTaintis used to determining whether to add taint on edge node
+	HasDefaultTaint = "with-edge-taint"
+
+	// KubeEdge Node IP address string
+	EdgeNodeIP = "edgenode-ip"
+
+	// KubeEdge EdgeCore config file path for override
+	ConfigPath = "edgecoreconfigpath"
+
 	// RemoteRuntimeEndpoint is KubeEdge remote-runtime-endpoint string
 	RemoteRuntimeEndpoint = "remote-runtime-endpoint"
 
@@ -63,6 +72,12 @@ const (
 	CertPort = "certport"
 
 	AdvertiseAddress = "advertise-address"
+
+	// QuicServer sets the port where to apply for the edge quic
+	QuicPort = "quicport"
+
+	// Tunnel sets the port where to apply for the edge stream
+	TunnelPort = "tunnelport"
 
 	TokenSecretName = "tokensecret"
 
