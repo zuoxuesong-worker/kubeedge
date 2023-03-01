@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/kubernetes/pkg/apis/core"
+
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -161,6 +163,21 @@ func AddJoinOtherFlags(cmd *cobra.Command, joinOptions *common.JoinOptions) {
 	cmd.Flags().StringVar(&joinOptions.ImageRepository, common.ImageRepository, joinOptions.ImageRepository,
 		`Use this key to decide which image repository to pull images from.`,
 	)
+
+	cmd.Flags().StringVarP(&joinOptions.EdgeNodeIP, common.EdgeNodeIP, "a", joinOptions.EdgeNodeIP,
+		"KubeEdge Node internal IP reported to K8s cluster, If flag not used then the command will use the IP address read from node network")
+
+	cmd.Flags().BoolVarP(&joinOptions.HasDefaultTaint, common.HasDefaultTaint, "w", joinOptions.HasDefaultTaint,
+		"To determine whether to add taint on edge node")
+
+	cmd.Flags().StringVarP(&joinOptions.ConfigPath, common.ConfigPath, "c", joinOptions.ConfigPath,
+		"KubeEdge config file path used to join")
+
+	cmd.Flags().StringVarP(&joinOptions.QuicPort, common.QuicPort, "q", joinOptions.QuicPort,
+		"The port where to apply for the edge quic")
+
+	cmd.Flags().StringVarP(&joinOptions.TunnelPort, common.TunnelPort, "n", joinOptions.TunnelPort,
+		"The port where to apply for the edge stream connected tunnel")
 }
 
 func newOption() *common.JoinOptions {
@@ -310,6 +327,27 @@ func createEdgeConfigFiles(opt *common.JoinOptions) error {
 		edgeCoreConfig.Modules.EdgeHub.HTTPServer = "https://" + net.JoinHostPort(host, "10002")
 	}
 	edgeCoreConfig.Modules.EdgeStream.TunnelServer = net.JoinHostPort(host, strconv.Itoa(constants.DefaultTunnelPort))
+
+	if opt.QuicPort != "" {
+		edgeCoreConfig.Modules.EdgeHub.Quic.Server = "https://" + net.JoinHostPort(host, opt.QuicPort)
+	} else {
+		edgeCoreConfig.Modules.EdgeHub.Quic.Server = "https://" + net.JoinHostPort(host, "10001")
+	}
+
+	if opt.TunnelPort != "" {
+		edgeCoreConfig.Modules.EdgeStream.TunnelServer = "https://" + net.JoinHostPort(host, opt.TunnelPort)
+	} else {
+		edgeCoreConfig.Modules.EdgeStream.TunnelServer = "https://" + net.JoinHostPort(host, "10004")
+	}
+
+	// add NoSchedule taints
+	if opt.HasDefaultTaint {
+		taint := core.Taint{
+			Key:    "node-role.kubernetes.io/edge",
+			Effect: "NoSchedule",
+		}
+		edgeCoreConfig.Modules.Edged.RegisterWithTaints = append(edgeCoreConfig.Modules.Edged.RegisterWithTaints, taint)
+	}
 
 	if len(opt.Labels) > 0 {
 		edgeCoreConfig.Modules.Edged.NodeLabels = setEdgedNodeLabels(opt)

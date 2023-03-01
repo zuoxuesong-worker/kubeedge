@@ -56,6 +56,11 @@ type JoinOptions struct {
 	Token                 string
 	CertPort              string
 	CGroupDriver          string
+	EdgeNodeIP            string
+	HasDefaultTaint       bool
+	ConfigPath            string
+	QuicPort              string
+	TunnelPort            string
 	Labels                []string
 	WithMQTT              bool
 	ImageRepository       string
