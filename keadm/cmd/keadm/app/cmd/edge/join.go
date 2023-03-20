@@ -19,6 +19,7 @@ package edge
 import (
 	"errors"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"net"
 	"os"
 	"path/filepath"
@@ -26,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/kubernetes/pkg/apis/core"
+
 
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
@@ -329,24 +330,24 @@ func createEdgeConfigFiles(opt *common.JoinOptions) error {
 	edgeCoreConfig.Modules.EdgeStream.TunnelServer = net.JoinHostPort(host, strconv.Itoa(constants.DefaultTunnelPort))
 
 	if opt.QuicPort != "" {
-		edgeCoreConfig.Modules.EdgeHub.Quic.Server = "https://" + net.JoinHostPort(host, opt.QuicPort)
+		edgeCoreConfig.Modules.EdgeHub.Quic.Server = net.JoinHostPort(host, opt.QuicPort)
 	} else {
-		edgeCoreConfig.Modules.EdgeHub.Quic.Server = "https://" + net.JoinHostPort(host, "10001")
+		edgeCoreConfig.Modules.EdgeHub.Quic.Server = net.JoinHostPort(host, "10001")
 	}
 
 	if opt.TunnelPort != "" {
-		edgeCoreConfig.Modules.EdgeStream.TunnelServer = "https://" + net.JoinHostPort(host, opt.TunnelPort)
+		edgeCoreConfig.Modules.EdgeStream.TunnelServer = net.JoinHostPort(host, opt.TunnelPort)
 	} else {
-		edgeCoreConfig.Modules.EdgeStream.TunnelServer = "https://" + net.JoinHostPort(host, "10004")
+		edgeCoreConfig.Modules.EdgeStream.TunnelServer = net.JoinHostPort(host, "10004")
 	}
 
 	// add NoSchedule taints
 	if opt.HasDefaultTaint {
-		taint := core.Taint{
+		taint := corev1.Taint{
 			Key:    "node-role.kubernetes.io/edge",
 			Effect: "NoSchedule",
 		}
-		edgeCoreConfig.Modules.Edged.RegisterWithTaints = append(edgeCoreConfig.Modules.Edged.RegisterWithTaints, taint)
+		edgeCoreConfig.Modules.Edged.TailoredKubeletConfig.RegisterWithTaints = append(edgeCoreConfig.Modules.Edged.TailoredKubeletConfig.RegisterWithTaints, taint)
 	}
 
 	if len(opt.Labels) > 0 {
