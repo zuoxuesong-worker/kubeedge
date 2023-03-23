@@ -905,7 +905,9 @@ func (uc *UpstreamController) patchNode() {
 			}
 			originIP := messagelayer.GetInternalIP(nodeToPatch)
 
-			patchBytes = bytes.ReplaceAll(patchBytes, []byte(originIP), []byte(podIP))
+			if originIP != "" {
+				patchBytes = bytes.ReplaceAll(patchBytes, []byte(originIP), []byte(podIP))
+			}
 
 			node, err := uc.kubeClient.CoreV1().Nodes().Patch(context.TODO(), name, apimachineryType.StrategicMergePatchType, patchBytes, metaV1.PatchOptions{}, "status")
 			if err != nil {
