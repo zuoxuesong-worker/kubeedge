@@ -178,6 +178,9 @@ func HijackInternalIP(node *v1.Node) *v1.Node {
 }
 
 func RegainInternalIP(node *v1.Node) *v1.Node {
+	if node == nil {
+		return nil
+	}
 	if node.GetAnnotations() != nil {
 		if val, ok := node.Annotations["kubeedge.io/internal-ip"]; ok {
 			SetInternalIP(node, val)
