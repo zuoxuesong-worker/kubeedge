@@ -49,6 +49,7 @@ cloudCore:
         maxIncomingStreams: "10000"
       https:
         enable: "true"
+      enableCertGeneration: false
     cloudStream:
       enable: "true"
     dynamicController:

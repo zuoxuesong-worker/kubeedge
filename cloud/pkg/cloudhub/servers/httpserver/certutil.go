@@ -81,10 +81,14 @@ func NewCloudCoreCertDERandKey(cfg *certutil.Config) ([]byte, []byte, error) {
 		return nil, nil, fmt.Errorf("failed to parse a caCert from the given ASN.1 DER data, err: %v", err)
 	}
 
+	var caKey crypto.Signer
 	caKeyDER := hubconfig.Config.CaKey
-	caKey, err := x509.ParseECPrivateKey(caKeyDER)
+	caKey, err = x509.ParseECPrivateKey(caKeyDER)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse ECPrivateKey, err: %v", err)
+		caKey, err = x509.ParsePKCS1PrivateKey(caKeyDER)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to parse ECPrivateKey, err: %v", err)
+		}
 	}
 
 	certDER, err := NewCertFromCa(cfg, caCert, serverKey.Public(), caKey, validalityPeriod)
