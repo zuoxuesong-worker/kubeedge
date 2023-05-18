@@ -19,6 +19,7 @@ package edge
 import (
 	"errors"
 	"fmt"
+	"github.com/kubeedge/kubeedge/pkg/image"
 	corev1 "k8s.io/api/core/v1"
 	"net"
 	"os"
