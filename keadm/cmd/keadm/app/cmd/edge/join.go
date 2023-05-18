@@ -289,6 +289,11 @@ func createEdgeConfigFiles(opt *common.JoinOptions) error {
 		edgeCoreConfig = v1alpha2.NewDefaultEdgeCoreConfig()
 	}
 
+	pauseImage := image.EdgeSet(opt.ImageRepository, opt.KubeEdgeVersion).Get("pause")
+	if pauseImage != "" {
+		edgeCoreConfig.Modules.Edged.PodSandboxImage = pauseImage
+	}
+
 	edgeCoreConfig.Modules.EdgeHub.WebSocket.Server = opt.CloudCoreIPPort
 	// TODO: remove this after release 1.14
 	// this is for keeping backward compatibility
