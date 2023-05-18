@@ -19,6 +19,7 @@ package edge
 import (
 	"errors"
 	"fmt"
+	"github.com/kubeedge/kubeedge/pkg/image"
 	corev1 "k8s.io/api/core/v1"
 	"net"
 	"os"
@@ -287,6 +288,11 @@ func createEdgeConfigFiles(opt *common.JoinOptions) error {
 	if edgeCoreConfig == nil {
 		klog.Infoln("The configuration does not exist or the parsing fails, and the default configuration is generated")
 		edgeCoreConfig = v1alpha2.NewDefaultEdgeCoreConfig()
+	}
+
+	pauseImage := image.EdgeSet(opt.ImageRepository, opt.KubeEdgeVersion).Get("pause")
+	if pauseImage != "" {
+		edgeCoreConfig.Modules.Edged.PodSandboxImage = pauseImage
 	}
 
 	edgeCoreConfig.Modules.EdgeHub.WebSocket.Server = opt.CloudCoreIPPort

@@ -155,7 +155,7 @@ func NewDefaultEdgeCoreConfig() *EdgeCoreConfig {
 				Enable: false,
 			},
 			EdgeStream: &EdgeStream{
-				Enable:                  false,
+				Enable:                  true,
 				TLSTunnelCAFile:         constants.DefaultCAFile,
 				TLSTunnelCertFile:       constants.DefaultCertFile,
 				TLSTunnelPrivateKeyFile: constants.DefaultKeyFile,
