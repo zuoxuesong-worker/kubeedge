@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/emicklei/go-restful"
@@ -210,9 +211,10 @@ func signEdgeCert(w http.ResponseWriter, r *http.Request) {
 
 // signCerts will create a certificate for EdgeCore
 func signCerts(subInfo pkix.Name, pbKey crypto.PublicKey, usages []x509.ExtKeyUsage) ([]byte, error) {
+	clusterName := os.Getenv("EDGE_CLUSTER_NAME")
 	cfgs := &certutil.Config{
-		CommonName:   subInfo.CommonName,
-		Organization: subInfo.Organization,
+		CommonName:   fmt.Sprintf("%s.%s", subInfo.CommonName, clusterName), // node_id.cluster_id
+		Organization: subInfo.Organization,                                  // EdgeWize
 		Usages:       usages,
 	}
 	clientKey := pbKey
