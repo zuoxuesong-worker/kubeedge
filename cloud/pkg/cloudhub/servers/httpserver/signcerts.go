@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"time"
 
@@ -31,6 +32,11 @@ import (
 
 	hubconfig "github.com/kubeedge/kubeedge/cloud/pkg/cloudhub/config"
 	"github.com/kubeedge/kubeedge/common/constants"
+)
+
+const (
+	ClusterName string = "clustername"
+	ClusterType string = "clustertype"
 )
 
 // SignCerts creates server's certificate and key
@@ -71,7 +77,8 @@ func GenerateToken() error {
 	token.Claims = jwt.StandardClaims{
 		ExpiresAt: expiresAt,
 	}
-
+	token.Header[ClusterName] = os.Getenv("EDGE_CLUSTER_NAME")
+	token.Header[ClusterType] = "EdgeCluster"
 	keyPEM := getCaKey()
 	tokenString, err := token.SignedString(keyPEM)
 

@@ -8,7 +8,7 @@ approvers:
   - "@kevin-wangzefeng"
   - "@"
 creation-date: 2020-09-09
-last-updated: 
+last-updated:
 ---
 
 # Mapper Design V2
@@ -17,7 +17,7 @@ last-updated:
 The original description could refer to the doc [mapper-design.md](https://github.com/kubeedge/kubeedge/blob/master/docs/proposals/mapper-design.md "mapper-design.md").
 
 Mapper is an interface between KubeEdge and devices. It could set/get device data, get and report the device status.
-KubeEdge uses device controller, device twin and mapper to control the devices. 
+KubeEdge uses device controller, device twin and mapper to control the devices.
 The device controller is on the cloud side, it uses [CRD](https://github.com/kubeedge/kubeedge/blob/master/docs/proposals/device-crd.md "device crd") to define and control devices.
 The device twin is on the edge side, it stores the value/status from the mapper and transfers the messages with device controller and mapper.
 
@@ -28,7 +28,7 @@ At run time, the configuration could be changed and the configmap will follow th
 
 About the device control/data, there're three types:
 
-1. Twin value. 
+1. Twin value.
 ```json
 "twins":[{
     "propertyName":"io-data",
@@ -59,7 +59,7 @@ The desired value will be set to the device, the reported value is from device a
     "dataTopic":"$ke/events/device/+/customized/update"
 }
 ```
-The data is from the device and sent to the mqtt server. 3-rd application could subscribe this topic and get the data. 
+The data is from the device and sent to the mqtt server. 3-rd application could subscribe this topic and get the data.
 Users could define the collect/report cycle and times.
 
 3. Device status.
@@ -78,9 +78,9 @@ Simplify the function and extract the common code to SDK. The action & scheduler
 ## Proposal
 ### Assumption
 The configmap is supposed to be static and only be read when the mapper starts. The reason is:
-1. The process to track the change of configmap is complex. Either device twin or mapper has to deal with this configmap change. 
-Device twin will also send many changing messages to the mapper. 
-Mapper has to receive these messages and also the messages are not enough to get all information and will read the configmap file for more info. 
+1. The process to track the change of configmap is complex. Either device twin or mapper has to deal with this configmap change.
+Device twin will also send many changing messages to the mapper.
+Mapper has to receive these messages and also the messages are not enough to get all information and will read the configmap file for more info.
 The process above makes the routine complex.
 2. For one node, devices combined to it are almost stable, the change should be minor, so the device configmap is almost unchangeable. The value to deal with this change is minor.
 3. Furthermore, we could process the configmap change with K8S style method: restart the container which is easy and simple.
@@ -134,7 +134,7 @@ type DevStatus int32
 const (
     DEVSTOK        DevStatus = 0
     DEVSTERR       DevStatus = 1 /*Expected value is not equal as setting*/
-    DEVSTDISCONN   DevStatus = 2 
+    DEVSTDISCONN   DevStatus = 2
     DEVSTUNHEALTHY DevStatus = 3 /*Unhealthy status from device*/
 )
 ```
