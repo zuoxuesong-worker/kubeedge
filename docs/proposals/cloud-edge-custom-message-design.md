@@ -52,7 +52,7 @@ The proposal is to introduce a solution for users to deliver their custom messag
 * A ruleEndpoint defines where messages come from, or where messages go to. It contains 3 types: rest, eventbus, servicebus.
     1. **rest**: a rest endpoint in the cloud. It is a source ruleEndpoint to send rest requests to the edge. Or a target ruleEndpoint to receive message from edge.
 
-    2. **eventbus**: It is a source ruleEndpoint to send data to the cloud, or a target ruleEndpoint to receive messages from the cloud. 
+    2. **eventbus**: It is a source ruleEndpoint to send data to the cloud, or a target ruleEndpoint to receive messages from the cloud.
 
     3. **servicebus**:  a rest api on edge node. It is a target ruleEndpoint to receive messages delivered from cloud.
 
@@ -107,7 +107,7 @@ spec:
 
 ```
 
-* Rule 
+* Rule
 ```
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -236,7 +236,7 @@ spec:
 
 1.3 call rest api in the cloud to send messages to edge.
 
-The rest api in the cloud can be called to send messages to eventbus on an edge node based on the node name and sourceResource. 
+The rest api in the cloud can be called to send messages to eventbus on an edge node based on the node name and sourceResource.
 
 - Method: POST
 - URL: **http://{rest_endpoint}/{node_name}/{namespace}/{path}**, {rest_endpoint} is router's endpoint, {node_name} is name of edgenode, {namespace} is the namespace of rule, {path}'s prefix is source ruleEndpoint's sourceResource.
@@ -247,7 +247,7 @@ For example:
 - URL: http://{rest_endpoint}/{node_name}/default/a
 - Body： {"message":"123"}
 
-1.4 User's app subscribes custom topics from mqtt-broker in edge to receive messages from the cloud. 
+1.4 User's app subscribes custom topics from mqtt-broker in edge to receive messages from the cloud.
 
 - Topic: {topic}, {topic} is target ruleEndpoint's targetResource.
 - Message:  {user_message}
@@ -311,7 +311,7 @@ spec:
   targetResource: {"resource":"http://a.com"}
 ```
 
-2.3 User's app in edge publishes messages with custom topic to MQTT broker on edge node. 
+2.3 User's app in edge publishes messages with custom topic to MQTT broker on edge node.
 - Topic: {namespace}/{topic}
 - Message:  {user_api_body}
 
@@ -320,7 +320,7 @@ for example:
 
  `mosquitto_pub -t 'default/test' -d -m '{"edgemsg":"msgtocloud"}'`
 
-2.4 Kubeedge delivers messages to user api address in cloud. 
+2.4 Kubeedge delivers messages to user api address in cloud.
 
 - Method: POST
 - URL: **http://{user_api}**, or **https://{user_api}**,{user_api} is target ruleEndpoint's targetResource.
@@ -385,7 +385,7 @@ spec:
 
 3.3 user's app calls rest api in the cloud to send messages to edge.
 
-The rest api in the cloud can be called to send messages to servicebus on an edge node based on the node name and sourceResource. 
+The rest api in the cloud can be called to send messages to servicebus on an edge node based on the node name and sourceResource.
 
 - Method: POST/GET/DELETE/PUT
 - URL: **http://{rest_endpoint}/{node_name}/{namespace}/{path}**, {rest_endpoint} is router's endpoint, {node_name} is name of edgenode, {namespace} is namespace of rule. {path} is source ruleEndpoint's sourceResource.
@@ -393,7 +393,7 @@ The rest api in the cloud can be called to send messages to servicebus on an edg
 
 finally, kubeedge's servicebus will call api on edgen node.
 - Method: POST/GET/DELETE/PUT
-- URL: **http://127.0.0.1:{port}/{path}**, {port} is target ruleEndpoint's properties, {path} is target ruleEndpoint's targetResource.  
+- URL: **http://127.0.0.1:{port}/{path}**, {port} is target ruleEndpoint's properties, {path} is target ruleEndpoint's targetResource.
 - Body: {user_message}, {user_message} is user's message
 
 For example:

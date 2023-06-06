@@ -24,7 +24,7 @@ import (
 	"github.com/kubeedge/beehive/pkg/core/model"
 	"github.com/kubeedge/kubeedge/common/constants"
 	pkgutil "github.com/kubeedge/kubeedge/pkg/util"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -148,7 +148,7 @@ func GetResourceTypeForDevice(resource string) (string, error) {
 	return "", fmt.Errorf("unknown resource, found: %s", resource)
 }
 
-func HijackInternalIP(node *v1.Node) *v1.Node {
+func HijackInternalIP(node *corev1.Node) *corev1.Node {
 	// TODO POD IP or SVC IP
 	podIP, err := pkgutil.GetLocalIP(pkgutil.GetHostname())
 	if err != nil {
@@ -159,7 +159,7 @@ func HijackInternalIP(node *v1.Node) *v1.Node {
 
 	internalIP := ""
 	for i, address := range node.Status.Addresses {
-		if address.Type == v1.NodeInternalIP {
+		if address.Type == corev1.NodeInternalIP {
 			internalIP = node.Status.Addresses[i].Address
 			node.Status.Addresses[i].Address = podIP
 			break
@@ -177,7 +177,7 @@ func HijackInternalIP(node *v1.Node) *v1.Node {
 	return node
 }
 
-func RegainInternalIP(node *v1.Node) *v1.Node {
+func RegainInternalIP(node *corev1.Node) *corev1.Node {
 	if node == nil {
 		return nil
 	}
@@ -189,19 +189,19 @@ func RegainInternalIP(node *v1.Node) *v1.Node {
 	return node
 }
 
-func SetInternalIP(node *v1.Node, target string) {
+func SetInternalIP(node *corev1.Node, target string) {
 	for i, address := range node.Status.Addresses {
-		if address.Type == v1.NodeInternalIP {
+		if address.Type == corev1.NodeInternalIP {
 			node.Status.Addresses[i].Address = target
 			break
 		}
 	}
 }
 
-func GetInternalIP(node *v1.Node) string {
+func GetInternalIP(node *corev1.Node) string {
 	internalIP := ""
 	for i, address := range node.Status.Addresses {
-		if address.Type == v1.NodeInternalIP {
+		if address.Type == corev1.NodeInternalIP {
 			internalIP = node.Status.Addresses[i].Address
 			break
 		}

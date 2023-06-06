@@ -50,6 +50,7 @@ cloudCore:
       https:
         enable: "true"
       enableCertGeneration: false
+      customCert: false
     cloudStream:
       enable: "true"
     dynamicController:

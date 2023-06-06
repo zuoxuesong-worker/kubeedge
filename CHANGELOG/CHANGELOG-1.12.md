@@ -10,7 +10,7 @@
         * [Important Steps before Upgrading](#important-steps-before-upgrading)
         * [Other Notable Changes](#other-notable-changes)
         * [Bug Fixes](#bug-fixes)
-    
+
 
 # v1.12.1
 
@@ -49,7 +49,7 @@ which will cover Device Lifecycle Management, Device Operation, Device Data Mana
 
 - **Device Lifecycle Management**: Making IOT device's lifecycle management as easy as managing a pod with simplifies operations
 - **Device Operation**: Providing the ability to operate devices through Kubernetes API
-- **Device Data Management**: Separate from device management, the data can be consumed by local application or sync to cloud in special tunnel 
+- **Device Data Management**: Separate from device management, the data can be consumed by local application or sync to cloud in special tunnel
 
 Refer to the links for more details.
 ([#4013](https://github.com/kubeedge/kubeedge/pull/4013), [#3914](https://github.com/kubeedge/kubeedge/pull/3914))
@@ -77,7 +77,7 @@ Refer to the links for more details. [EdgeMesh#372](https://github.com/kubeedge/
 
 Introduce NodeUpgradeJob v1alpha1 API to upgrade edge nodes from cloud now. With NodeUpgradeJob API and Controller, users can:
 
-- Using NodeUpgradeJob API to upgrade selected edge nodes from cloud 
+- Using NodeUpgradeJob API to upgrade selected edge nodes from cloud
 - If upgrade fails, rollback to the original version
 
 Refer to the links for more details.
@@ -105,8 +105,8 @@ Refer to the links for more details.
 
 ## Important Steps before Upgrading
 
-- If you want to upgrade KubeEdge to v1.12, the configuration file in EdgeCore has upgraded to v1alpha2, you must modify your configuration file of edged in EdgeCore to adapt the new edged.  
-- If you want to use authorization for Edge Kube-API Endpoint, please enabled `RequireAuthorization` feature through feature gate both in CloudCore and EdgeCore. 
+- If you want to upgrade KubeEdge to v1.12, the configuration file in EdgeCore has upgraded to v1alpha2, you must modify your configuration file of edged in EdgeCore to adapt the new edged.
+- If you want to use authorization for Edge Kube-API Endpoint, please enabled `RequireAuthorization` feature through feature gate both in CloudCore and EdgeCore.
   If `RequireAuthorization` feature is enabled, metaServer will only serve for https request.
 - If you want to upgrade edgemesh to v1.12, you do not need to deploy the existing edgemesh-server, and you need to configure relayNodes.
 - If you want to run EdgeMesh v1.12 on KubeEdge v1.12, and use https request to talk to KubeEdge, you must set `kubeAPIConfig.metaServer.security.enable=true`.

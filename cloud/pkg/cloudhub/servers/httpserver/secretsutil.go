@@ -3,7 +3,6 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"os"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -17,8 +16,6 @@ import (
 const (
 	TokenSecretName      string = "tokensecret"
 	TokenDataName        string = "tokendata"
-	ClusterName          string = "clustername"
-	ClusterType          string = "clustertype"
 	CaSecretName         string = "casecret"
 	CloudCoreSecretName  string = "cloudcoresecret"
 	CaDataName           string = "cadata"
@@ -51,7 +48,6 @@ func CreateSecret(secret *corev1.Secret, ns string) error {
 }
 
 func CreateTokenSecret(caHashAndToken []byte) error {
-	clusterName := os.Getenv("EDGE_CLUSTER_NAME")
 	token := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      TokenSecretName,
@@ -59,8 +55,6 @@ func CreateTokenSecret(caHashAndToken []byte) error {
 		},
 		Data: map[string][]byte{
 			TokenDataName: caHashAndToken,
-			ClusterName:   []byte(clusterName),
-			ClusterType:   []byte("EdgeCluster"),
 		},
 		StringData: map[string]string{},
 		Type:       "Opaque",

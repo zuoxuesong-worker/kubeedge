@@ -2,9 +2,11 @@ package certificate
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -119,16 +121,16 @@ func (cm *CertManager) getCurrent() (*tls.Certificate, error) {
 
 // applyCerts realizes the certificate application by token
 func (cm *CertManager) applyCerts() error {
-	cacert, err := GetCACert(cm.caURL)
-	if err != nil {
-		return fmt.Errorf("failed to get CA certificate, err: %v", err)
-	}
-
 	// validate the CA certificate by hashcode
 	tokenParts := strings.Split(cm.token, ".")
 	if len(tokenParts) != 4 {
 		return fmt.Errorf("token credentials are in the wrong format")
 	}
+	cacert, err := GetCACert(cm.caURL, strings.Join(tokenParts[1:], "."), cm.NodeName)
+	if err != nil {
+		return fmt.Errorf("failed to get CA certificate, err: %v", err)
+	}
+
 	ok, hash, newHash := ValidateCACerts(cacert, tokenParts[0])
 	if !ok {
 		return fmt.Errorf("failed to validate CA certificate. tokenCAhash: %s, CAhash: %s", hash, newHash)
@@ -137,7 +139,7 @@ func (cm *CertManager) applyCerts() error {
 	// save the ca.crt to file
 	ca, err := x509.ParseCertificate(cacert)
 	if err != nil {
-		return fmt.Errorf("failed to parse the CA certificate, error: %v", err)
+		return fmt.Errorf("failed to parse the CA certificate, error: %v, size: %d, %v", err, len(cacert), cacert)
 	}
 
 	if err = certutil.WriteCert(cm.caFile, ca); err != nil {
@@ -247,9 +249,9 @@ func (cm *CertManager) getCA() ([]byte, error) {
 }
 
 // GetCACert gets the cloudcore CA certificate
-func GetCACert(url string) ([]byte, error) {
+func GetCACert(url string, token, nodename string) ([]byte, error) {
 	client := http.NewHTTPClient()
-	req, err := http.BuildRequest(nethttp.MethodGet, url, nil, "", "")
+	req, err := http.BuildRequest(nethttp.MethodGet, url, nil, token, nodename)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +269,12 @@ func GetCACert(url string) ([]byte, error) {
 }
 
 // GetEdgeCert applies for the certificate from cloudcore
-func (cm *CertManager) GetEdgeCert(url string, capem []byte, cert tls.Certificate, token string) (*ecdsa.PrivateKey, []byte, error) {
-	pk, csr, err := cm.getCSR()
+func (cm *CertManager) GetEdgeCert(url string, capem []byte, cert tls.Certificate, token string) (crypto.Signer, []byte, error) {
+	sa, err := GetSignatureAlgorithm(capem)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get ca SignatureAlgorithm: %v", err)
+	}
+	pk, csr, err := cm.getCSR(sa)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create CSR: %v", err)
 	}
@@ -300,10 +306,20 @@ func (cm *CertManager) GetEdgeCert(url string, capem []byte, cert tls.Certificat
 	return pk, content, nil
 }
 
-func (cm *CertManager) getCSR() (*ecdsa.PrivateKey, []byte, error) {
-	pk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return nil, nil, err
+func (cm *CertManager) getCSR(sa x509.SignatureAlgorithm) (crypto.Signer, []byte, error) {
+	var pk crypto.Signer
+	var err error
+	switch sa {
+	case x509.ECDSAWithSHA256:
+		pk, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return nil, nil, err
+		}
+	case x509.SHA256WithRSA:
+		pk, err = rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	csr, err := x509.CreateCertificateRequest(rand.Reader, cm.CR, pk)
 	if err != nil {
@@ -326,4 +342,16 @@ func ValidateCACerts(cacerts []byte, hash string) (bool, string, string) {
 func hashCA(cacerts []byte) string {
 	digest := sha256.Sum256(cacerts)
 	return hex.EncodeToString(digest[:])
+}
+
+func GetSignatureAlgorithm(caPem []byte) (x509.SignatureAlgorithm, error) {
+	block, _ := pem.Decode(caPem)
+	if block == nil {
+		return x509.UnknownSignatureAlgorithm, fmt.Errorf("invalid ca pem")
+	}
+	crt, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return x509.UnknownSignatureAlgorithm, err
+	}
+	return crt.SignatureAlgorithm, nil
 }
