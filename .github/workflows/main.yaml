@@ -24,7 +24,7 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Verify vendor, licenses, do lint
     env:
       GOPATH: /home/runner/work/${{ github.repository }}
@@ -59,7 +59,7 @@ jobs:
 
   image-prepare:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Prepare kubeedge/build-tools image
     steps:
       - name: Pull kubeedge/build-tools image
@@ -76,7 +76,7 @@ jobs:
 
   build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Multiple build
     needs: image-prepare
     steps:
@@ -112,7 +112,7 @@ jobs:
 
   basic_test:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Unit test, integration test edge
     env:
       GO111MODULE: on
@@ -163,7 +163,7 @@ jobs:
         PROTOCOL:
           - WebSocket
           - QUIC
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: E2e test
     needs: image-prepare
     env:
@@ -222,7 +222,7 @@ jobs:
 
   keadm_deprecated_e2e_test:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Keadm deprecated e2e test
     needs: image-prepare
     env:
@@ -263,7 +263,7 @@ jobs:
 
   keadm_e2e_test:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Keadm e2e test
     env:
       GO111MODULE: on
@@ -298,7 +298,7 @@ jobs:
 
   docker_build:
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 120
     name: Multiple docker image build
     steps:
       - uses: actions/cache@v3

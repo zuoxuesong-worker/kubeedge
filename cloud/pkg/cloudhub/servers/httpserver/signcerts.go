@@ -114,6 +114,8 @@ func refreshToken() string {
 	expirationTime := time.Now().Add(time.Hour * hubconfig.Config.CloudHub.TokenRefreshDuration * 2)
 	claims.ExpiresAt = expirationTime.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token.Header[ClusterName] = os.Getenv("EDGE_CLUSTER_NAME")
+	token.Header[ClusterType] = "EdgeCluster"
 	keyPEM := getCaKey()
 	tokenString, err := token.SignedString(keyPEM)
 	if err != nil {
