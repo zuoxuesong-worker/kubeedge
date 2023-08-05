@@ -149,7 +149,6 @@ func GetResourceTypeForDevice(resource string) (string, error) {
 }
 
 func HijackInternalIP(node *corev1.Node) *corev1.Node {
-	// TODO POD IP or SVC IP
 	podIP, err := pkgutil.GetLocalIP(pkgutil.GetHostname())
 	if err != nil {
 		klog.Errorf("Failed to get Local IP address: %v", err)
@@ -157,22 +156,14 @@ func HijackInternalIP(node *corev1.Node) *corev1.Node {
 	}
 	klog.Infoln("pod ip", podIP)
 
-	internalIP := ""
 	for i, address := range node.Status.Addresses {
 		if address.Type == corev1.NodeInternalIP {
-			internalIP = node.Status.Addresses[i].Address
 			node.Status.Addresses[i].Address = podIP
 			break
 		}
 	}
 	if node.Status.DaemonEndpoints.KubeletEndpoint.Port == 0 {
-		node.Status.DaemonEndpoints.KubeletEndpoint.Port = 10003
-	}
-	if node.GetAnnotations() != nil {
-		node.Annotations["kubeedge.io/internal-ip"] = internalIP
-	} else {
-		node.Annotations = make(map[string]string)
-		node.Annotations["kubeedge.io/internal-ip"] = internalIP
+		node.Status.DaemonEndpoints.KubeletEndpoint.Port = 10003 // TODO: get from config
 	}
 	return node
 }
@@ -181,8 +172,8 @@ func RegainInternalIP(node *corev1.Node) *corev1.Node {
 	if node == nil {
 		return nil
 	}
-	if node.GetAnnotations() != nil {
-		if val, ok := node.Annotations["kubeedge.io/internal-ip"]; ok {
+	if node.GetLabels() != nil {
+		if val, ok := node.Labels["kubeedge.io/internal-ip"]; ok {
 			SetInternalIP(node, val)
 		}
 	}
@@ -198,13 +189,14 @@ func SetInternalIP(node *corev1.Node, target string) {
 	}
 }
 
-func GetInternalIP(node *corev1.Node) string {
-	internalIP := ""
-	for i, address := range node.Status.Addresses {
-		if address.Type == corev1.NodeInternalIP {
-			internalIP = node.Status.Addresses[i].Address
-			break
+func GetInternalIPByLabel(node *corev1.Node) string {
+	if node == nil {
+		return ""
+	}
+	if node.GetLabels() != nil {
+		if val, ok := node.Labels["kubeedge.io/internal-ip"]; ok {
+			return val
 		}
 	}
-	return internalIP
+	return ""
 }
