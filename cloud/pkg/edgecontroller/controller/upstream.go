@@ -890,21 +890,19 @@ func (uc *UpstreamController) patchNode() {
 				klog.Warningf("message: %s process failure, get data failed with error: %v", msg.GetID(), err)
 				continue
 			}
-
+			// replace internal ip with pod ip
 			podIP, err := pkgutil.GetLocalIP(pkgutil.GetHostname())
 			if err != nil {
 				klog.Errorf("Failed to get Local IP address: %v", err)
 				continue
 			}
 
-			nodeToPatch := &v1.Node{}
-			err = json.Unmarshal(patchBytes, nodeToPatch)
+			oldNode, err := uc.nodeLister.Get(name)
 			if err != nil {
-				klog.Warningf("message: %s process failure, unmarshal msg data failed with error: %v", msg.GetID(), err)
+				klog.Errorf("message: %s process failure, get node failed with error: %v, namespace: %s, name: %s", msg.GetID(), err, namespace, name)
 				continue
 			}
-			originIP := messagelayer.GetInternalIP(nodeToPatch)
-
+			originIP := messagelayer.GetInternalIPByLabel(oldNode)
 			if originIP != "" {
 				patchBytes = bytes.ReplaceAll(patchBytes, []byte(originIP), []byte(podIP))
 			}

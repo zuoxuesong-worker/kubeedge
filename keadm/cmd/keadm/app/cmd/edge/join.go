@@ -28,8 +28,6 @@ import (
 	"strings"
 	"time"
 
-
-
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -359,6 +357,11 @@ func createEdgeConfigFiles(opt *common.JoinOptions) error {
 	if len(opt.Labels) > 0 {
 		edgeCoreConfig.Modules.Edged.NodeLabels = setEdgedNodeLabels(opt)
 	}
+	if edgeCoreConfig.Modules.Edged.NodeLabels == nil {
+		edgeCoreConfig.Modules.Edged.NodeLabels = make(map[string]string)
+	}
+	edgeCoreConfig.Modules.Edged.NodeLabels["kubeedge.io/internal-ip"] = edgeCoreConfig.Modules.Edged.NodeIP
+	klog.V(3).Infof("edgeCoreConfig.Modules.Edged.NodeLabels: %v", edgeCoreConfig.Modules.Edged.NodeLabels)
 
 	if errs := validation.ValidateEdgeCoreConfiguration(edgeCoreConfig); len(errs) > 0 {
 		return errors.New(pkgutil.SpliceErrors(errs.ToAggregate().Errors()))
@@ -426,6 +429,11 @@ func createV1alpha1EdgeConfigFiles(opt *common.JoinOptions) error {
 	if len(opt.Labels) > 0 {
 		edgeCoreConfig.Modules.Edged.Labels = setEdgedNodeLabels(opt)
 	}
+	if edgeCoreConfig.Modules.Edged.Labels == nil {
+		edgeCoreConfig.Modules.Edged.Labels = make(map[string]string)
+	}
+	edgeCoreConfig.Modules.Edged.Labels["kubeedge.io/internal-ip"] = edgeCoreConfig.Modules.Edged.NodeIP
+	klog.V(3).Infof("edgeCoreConfig.Modules.Edged.Labels: %v", edgeCoreConfig.Modules.Edged.Labels)
 
 	if errs := validationv1alpha1.ValidateEdgeCoreConfiguration(edgeCoreConfig); len(errs) > 0 {
 		return errors.New(pkgutil.SpliceErrors(errs.ToAggregate().Errors()))
