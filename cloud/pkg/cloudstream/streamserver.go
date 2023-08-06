@@ -20,7 +20,9 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	certutil "k8s.io/client-go/util/cert"
 	"net/http"
 	"os"
 	"reflect"
@@ -322,10 +324,73 @@ func (s *StreamServer) Start() {
 			MinVersion: tls.VersionTLS12,
 		},
 	}
+	err = s.initStreamCert()
+	if err != nil {
+		klog.Exitf("Init stream cert error %v", err)
+		return
+	}
 	klog.Infof("Prepare to start stream server ...")
-	err = streamServer.ListenAndServeTLS(config.Config.TLSStreamCertFile, config.Config.TLSStreamPrivateKeyFile)
+	err = streamServer.ListenAndServeTLS("/etc/kubeedge/stream.crt", "/etc/kubeedge/stream.key")
 	if err != nil {
 		klog.Exitf("Start stream server error %v\n", err)
 		return
 	}
+}
+
+// read config.Config.TLSStreamCertFile and parse it to tls.Certificate
+// regen cert with current pod ip
+func (s *StreamServer) initStreamCert() error {
+	// get ca crt and key from configmap casecret in kubeedge namespace
+	kubeClient := client.GetKubeClient()
+	if kubeClient == nil {
+		return fmt.Errorf("can not get kube client")
+	}
+	cloudhubSecret, err := kubeClient.CoreV1().Secrets("kubeedge").Get(context.Background(), "cloudhub", v1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("get ca secret error %v", err)
+	}
+	var caCrt []byte
+	var caKey []byte
+
+	var ok bool
+	caCrtPem, ok := cloudhubSecret.Data["rootCA.crt"]
+	if !ok {
+		klog.Errorf("secret root ca cert is invalided")
+		return fmt.Errorf("invalid rootca secret")
+	}
+	if caCrtBlock, _ := pem.Decode(caCrtPem); caCrtBlock == nil {
+		klog.Errorf("pem decode root ca cert error")
+		return fmt.Errorf("invalid rootca secret")
+	} else {
+		caCrt = caCrtBlock.Bytes
+	}
+
+	caKeyPem, ok := cloudhubSecret.Data["rootCA.key"]
+	if !ok {
+		klog.Errorf("secret root ca key is invalided")
+		return fmt.Errorf("invalid rootca secret")
+	}
+	if caKeyBlock, _ := pem.Decode(caKeyPem); caKeyBlock == nil {
+		klog.Errorf("pem decode root ca key error")
+		return fmt.Errorf("invalid rootca secret")
+	} else {
+		caKey = caKeyBlock.Bytes
+	}
+	serverCrt, serverKey, err := SignCloudCoreCert(caCrt, caKey)
+	if err != nil {
+		return err
+	}
+	serverCrtPem := pem.EncodeToMemory(&pem.Block{Type: certutil.CertificateBlockType, Bytes: serverCrt})
+	serverKeyPem := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: serverKey})
+	klog.V(3).Infof("server crt: %s", string(serverCrtPem))
+	klog.V(3).Infof("server key: %s", string(serverKeyPem))
+	err = os.WriteFile("/etc/kubeedge/stream.crt", serverCrtPem, 0644)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile("/etc/kubeedge/stream.key", serverKeyPem, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
