@@ -19,14 +19,15 @@ package edge
 import (
 	"errors"
 	"fmt"
-	"github.com/kubeedge/kubeedge/pkg/image"
-	corev1 "k8s.io/api/core/v1"
 	"net"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/kubeedge/kubeedge/pkg/image"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
@@ -360,6 +361,14 @@ func createEdgeConfigFiles(opt *common.JoinOptions) error {
 	if edgeCoreConfig.Modules.Edged.NodeLabels == nil {
 		edgeCoreConfig.Modules.Edged.NodeLabels = make(map[string]string)
 	}
+	if edgeCoreConfig.Modules.Edged.NodeIP == "" {
+		hostnameOverride := pkgutil.GetHostname()
+		edgeCoreConfig.Modules.Edged.NodeIP, err = pkgutil.GetLocalIP(hostnameOverride)
+		if err != nil {
+			klog.Errorf("get local ip failed: %v", err)
+			return fmt.Errorf("get local ip failed: %v", err)
+		}
+	}
 	edgeCoreConfig.Modules.Edged.NodeLabels["kubeedge.io/internal-ip"] = edgeCoreConfig.Modules.Edged.NodeIP
 	klog.V(3).Infof("edgeCoreConfig.Modules.Edged.NodeLabels: %v", edgeCoreConfig.Modules.Edged.NodeLabels)
 
@@ -431,6 +440,14 @@ func createV1alpha1EdgeConfigFiles(opt *common.JoinOptions) error {
 	}
 	if edgeCoreConfig.Modules.Edged.Labels == nil {
 		edgeCoreConfig.Modules.Edged.Labels = make(map[string]string)
+	}
+	if edgeCoreConfig.Modules.Edged.NodeIP == "" {
+		hostnameOverride := pkgutil.GetHostname()
+		edgeCoreConfig.Modules.Edged.NodeIP, err = pkgutil.GetLocalIP(hostnameOverride)
+		if err != nil {
+			klog.Errorf("get local ip failed: %v", err)
+			return fmt.Errorf("get local ip failed: %v", err)
+		}
 	}
 	edgeCoreConfig.Modules.Edged.Labels["kubeedge.io/internal-ip"] = edgeCoreConfig.Modules.Edged.NodeIP
 	klog.V(3).Infof("edgeCoreConfig.Modules.Edged.Labels: %v", edgeCoreConfig.Modules.Edged.Labels)
