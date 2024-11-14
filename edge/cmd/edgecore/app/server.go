@@ -53,6 +53,11 @@ is the message processor between edged and edgehub. It is also responsible for s
 to/from a lightweight database (SQLite).ServiceBus is a HTTP client to interact with HTTP servers (REST),
 offering HTTP client capabilities to components of cloud to reach HTTP servers running at edge. `,
 		Run: func(cmd *cobra.Command, args []string) {
+			if versionFlag, _ := cmd.Flags().GetBool("version"); versionFlag {
+				fmt.Printf("EdgeCore version: %s\n", version.Get())
+				os.Exit(0)
+			}
+
 			flag.PrintMinConfigAndExitIfRequested(v1alpha2.NewMinEdgeCoreConfig())
 			flag.PrintDefaultConfigAndExitIfRequested(v1alpha2.NewDefaultEdgeCoreConfig())
 			flag.PrintFlags(cmd.Flags())
@@ -131,6 +136,10 @@ offering HTTP client capabilities to components of cloud to reach HTTP servers r
 			core.Run()
 		},
 	}
+
+	// Add version flag
+	cmd.Flags().BoolP("version", "V", false, "Print the version and exit")
+
 	fs := cmd.Flags()
 	namedFs := opts.Flags()
 	flag.AddFlags(namedFs.FlagSet("global"))
