@@ -1102,7 +1102,8 @@ func (uc *UpstreamController) patchPod() {
 					var event *v1.Event
 					if condition.Status == v1.ConditionTrue {
 						reason = "Running"
-						event = makeEvent(ref, nil, v1.EventTypeNormal, reason, condition.Message)
+						message := "pod is running"
+						event = makeEvent(ref, nil, v1.EventTypeNormal, reason, message)
 					} else {
 						event = makeEvent(ref, nil, v1.EventTypeWarning, reason, condition.Message)
 					}
