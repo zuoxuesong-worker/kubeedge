@@ -1025,6 +1025,31 @@ func (uc *UpstreamController) updateNode() {
 	}
 }
 
+func makeEvent(ref *v1.ObjectReference, annotations map[string]string, eventtype, reason, message string) *v1.Event {
+	t := metaV1.Time{Time: time.Now()}
+	namespace := ref.Namespace
+	if namespace == "" {
+		namespace = metaV1.NamespaceDefault
+	}
+	return &v1.Event{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:        fmt.Sprintf("%v.%x", ref.Name, t.UnixNano()),
+			Namespace:   namespace,
+			Annotations: annotations,
+		},
+		InvolvedObject: *ref,
+		Reason:         reason,
+		Message:        message,
+		FirstTimestamp: t,
+		LastTimestamp:  t,
+		Count:          1,
+		Type:           eventtype,
+		Source: v1.EventSource{
+			Component: "cloudcore",
+		},
+	}
+}
+
 func (uc *UpstreamController) patchPod() {
 	for {
 		select {
@@ -1054,6 +1079,40 @@ func (uc *UpstreamController) patchPod() {
 			updatedPod, err := uc.kubeClient.CoreV1().Pods(namespace).Patch(context.TODO(), name, apimachineryType.StrategicMergePatchType, patchBytes, metaV1.PatchOptions{}, "status")
 			if err != nil {
 				klog.Errorf("message: %s process failure, patch pod failed with error: %v, namespace: %s, name: %s", msg.GetID(), err, namespace, name)
+			}
+
+			ref := &v1.ObjectReference{
+				Kind:      "Pod",
+				Name:      name,
+				Namespace: namespace,
+				UID:       updatedPod.UID,
+			}
+
+			podStatus := &v1.Pod{}
+			err = json.Unmarshal(patchBytes, podStatus)
+			if err != nil {
+				klog.Warningf("message: %s, unmarshal pod status failed with error: %s, namespace: %s, name: %s", msg.GetID(), err, updatedPod.Namespace, updatedPod.Name)
+				continue
+			}
+
+			for _, condition := range podStatus.Status.Conditions {
+				switch condition.Type {
+				case v1.PodReady:
+					reason := condition.Reason
+					var event *v1.Event
+					if condition.Status == v1.ConditionTrue {
+						reason = "Running"
+						message := "pod is running"
+						event = makeEvent(ref, nil, v1.EventTypeNormal, reason, message)
+					} else {
+						event = makeEvent(ref, nil, v1.EventTypeWarning, reason, condition.Message)
+					}
+					_, err = uc.kubeClient.CoreV1().Events(namespace).Create(context.Background(),
+						event, metaV1.CreateOptions{})
+					if err != nil {
+						klog.Warningf("message: %s, create event failed with error: %s, namespace: %s, name: %s", msg.GetID(), err, updatedPod.Namespace, updatedPod.Name)
+					}
+				}
 			}
 
 			resMsg := model.NewMessage(msg.GetID()).
