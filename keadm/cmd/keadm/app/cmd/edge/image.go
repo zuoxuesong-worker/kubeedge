@@ -40,13 +40,13 @@ func request(opt *common.JoinOptions, step *common.Step) error {
 		return fmt.Errorf("pull Images failed: %v", err)
 	}
 
-	step.Printf("Copy resources from the image to the management directory")
-	files := map[string]string{
-		filepath.Join(util.KubeEdgeUsrBinPath, util.KubeEdgeBinaryName): filepath.Join(util.KubeEdgeUsrBinPath, util.KubeEdgeBinaryName),
-	}
-	if err := runtime.CopyResources(imageSet.Get(image.EdgeCore), files); err != nil {
-		return fmt.Errorf("copy resources failed: %v", err)
-	}
+	step.Printf("Skipped :Copy resources from the image to the management directory")
+	//files := map[string]string{
+	//	filepath.Join(util.KubeEdgeUsrBinPath, util.KubeEdgeBinaryName): filepath.Join(util.KubeEdgeUsrBinPath, util.KubeEdgeBinaryName),
+	//}
+	//if err := runtime.CopyResources(imageSet.Get(image.EdgeCore), files); err != nil {
+	//	return fmt.Errorf("copy resources failed: %v", err)
+	//}
 
 	if opt.WithMQTT {
 		step.Printf("Start the default mqtt service")
